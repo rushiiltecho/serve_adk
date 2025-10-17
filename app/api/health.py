@@ -2,10 +2,10 @@
 import logging
 from fastapi import APIRouter, Depends
 from datetime import datetime
-from models.responses import HealthResponse
-from config import settings
-from services.auth_service import auth_service
-from services.agent_service import agent_service_factory
+from app.models.responses import HealthResponse
+from app.config import settings
+from app.services.auth_service import auth_service
+from app.services.agent_service import agent_service_factory
 
 logger = logging.getLogger(__name__)
 

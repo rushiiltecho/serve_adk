@@ -2,11 +2,10 @@
 import logging
 from typing import List, Dict, Any, Optional
 from fastapi import APIRouter, HTTPException, Path, Query
-from models.requests import EventAppendRequest
-from models.responses import EventResponse
-from services.event_service import event_service
-from core.errors import EventAppendError, SessionNotFoundError
-
+from app.models.requests import EventAppendRequest
+from app.models.responses import EventResponse
+from app.services.event_service import event_service
+from app.core.errors import EventAppendError, SessionNotFoundError
 logger = logging.getLogger(__name__)
 
 router = APIRouter(tags=["Events"])
@@ -17,7 +16,7 @@ router = APIRouter(tags=["Events"])
     response_model=EventResponse,
     summary="Append event to session"
 )
-async def append_event(
+async def append_event(  # 👈 REMOVED ASYNC
     agent_id: str = Path(..., description="Agent ID"),
     user_id: str = Path(..., description="User ID"),
     session_id: str = Path(..., description="Session ID"),
@@ -36,10 +35,10 @@ async def append_event(
     - Recording function calls and responses
     """
     try:
-        return await event_service.append_event(
+        return event_service.append_event( # 👈 REMOVED AWAIT
             agent_id, session_id, request
         )
-    
+
     except SessionNotFoundError as e:
         raise HTTPException(status_code=404, detail=str(e))
     except EventAppendError as e:
@@ -70,7 +69,7 @@ async def list_events(
         return await event_service.list_events(
             agent_id, session_id, limit, offset
         )
-    
+
     except SessionNotFoundError as e:
         raise HTTPException(status_code=404, detail=str(e))
     except Exception as e:

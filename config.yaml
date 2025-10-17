@@ -1,9 +1,9 @@
 # Agent configurations
 agents:
-  - agent_id: "1234567890"  # Reasoning Engine ID
-    name: "currency_agent"
-    display_name: "Currency Exchange Agent"
-    description: "Agent for currency exchange queries"
+  - agent_id: "5090250653440147456"  # Reasoning Engine ID
+    name: "salesforce_agent"
+    display_name: "Salesforce Test"
+    description: "Agent for Salesforce Write Operations"
     project_id: "${GOOGLE_CLOUD_PROJECT}"
     location: "${GOOGLE_CLOUD_LOCATION}"
     enabled: true

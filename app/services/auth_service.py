@@ -4,7 +4,7 @@ from typing import Optional
 from google.auth import default
 from google.auth.credentials import Credentials
 from google.oauth2 import service_account
-from core.errors import AuthenticationError
+from app.core.errors import AuthenticationError
 
 logger = logging.getLogger(__name__)
 

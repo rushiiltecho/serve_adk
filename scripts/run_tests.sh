@@ -45,7 +45,7 @@ touch tests/integration/__init__.py
 
 # Check if app module can be imported
 echo -e "\n${BLUE}Verifying app module...${NC}"
-python3 -c "import sys; sys.path.insert(0, '.'); from config import Settings; print('✅ app module imports successfully')" 2>&1
+python3 -c "import sys; sys.path.insert(0, '.'); from app.config import Settings; print('✅ app module imports successfully')" 2>&1
 
 if [ $? -ne 0 ]; then
     echo -e "${RED}ERROR: Cannot import app module${NC}"
@@ -85,7 +85,7 @@ def test_python_path():
 def test_app_import():
     """Test that app module can be imported."""
     try:
-        from config import Settings
+        from app.config import Settings
         assert Settings is not None
     except ImportError as e:
         pytest.fail(f"Failed to import app module: {e}")
@@ -108,7 +108,7 @@ def test_agents_config():
 
 def test_settings_creation():
     """Test that Settings can be created."""
-    from config import Settings
+    from app.config import Settings
     
     # Create settings with test values
     settings = Settings(

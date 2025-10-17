@@ -3,7 +3,7 @@ import logging
 import sys
 from typing import Any, Dict
 from pythonjsonlogger import jsonlogger
-from config import settings
+from app.config import settings
 
 
 class CustomJsonFormatter(jsonlogger.JsonFormatter):

@@ -1,11 +1,12 @@
 """Session management endpoints."""
 import logging
+import traceback
 from typing import List
 from fastapi import APIRouter, HTTPException, Path, Query
-from models.requests import SessionCreateRequest, SessionStateUpdateRequest
-from models.responses import SessionResponse
-from services.session_service import session_service
-from core.errors import SessionNotFoundError, InvalidStateUpdateError
+from app.models.requests import SessionCreateRequest, SessionStateUpdateRequest
+from app.models.responses import SessionResponse
+from app.services.session_service import session_service
+from app.core.errors import SessionNotFoundError, InvalidStateUpdateError
 
 logger = logging.getLogger(__name__)
 
@@ -31,11 +32,11 @@ async def create_session(
         if not request:
             request = SessionCreateRequest(user_id=user_id)
         
-        return await session_service.create_session(agent_id, request)
+        return session_service.create_session(agent_id, request)
     
     except Exception as e:
         logger.error(f"Failed to create session: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=f"{str(e)}\n{traceback.format_exc()}")
 
 
 @router.post(

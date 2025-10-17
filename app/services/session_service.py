@@ -5,13 +5,12 @@ import uuid
 from typing import Dict, Any, Optional, List
 from datetime import datetime
 import vertexai
-from config import settings
-from models.requests import SessionCreateRequest, SessionStateUpdateRequest, EventAppendRequest
-from models.responses import SessionResponse
-from core.errors import SessionNotFoundError, InvalidStateUpdateError
-from services.auth_service import auth_service
-from services.event_service import EventService
-
+from app.config import settings
+from app.models.requests import SessionCreateRequest, SessionStateUpdateRequest, EventAppendRequest
+from app.models.responses import SessionResponse
+from app.core.errors import SessionNotFoundError, InvalidStateUpdateError
+from app.services.auth_service import auth_service
+from app.services.event_service import EventService
 logger = logging.getLogger(__name__)
 
 
@@ -28,17 +27,21 @@ class SessionService:
         """Initialize Vertex AI client."""
         try:
             credentials = auth_service.get_credentials()
-            self.client = vertexai.Client(
+            client = vertexai.Client(
                 project=settings.google_cloud_project,
                 location=settings.google_cloud_location,
                 credentials=credentials
             )
+            # 👇 ADD THIS CHECK
+            if not client:
+                raise RuntimeError("Vertex AI Client initialization returned None.")
+            self.client = client
             logger.info("Session service initialized")
         except Exception as e:
             logger.error(f"Failed to initialize session service: {e}")
             raise
     
-    async def create_session(
+    def create_session(
         self,
         agent_id: str,
         request: SessionCreateRequest
@@ -61,7 +64,7 @@ class SessionService:
             )
             
             # Create session using Vertex AI SDK
-            session_response = await self.client.agent_engines.sessions.create(
+            session_response = self.client.agent_engines.sessions.create(
                 name=agent_name,
                 user_id=request.user_id
             )
@@ -75,16 +78,16 @@ class SessionService:
                     state_delta=request.initial_state,
                     replace=False
                 )
-                await self.update_state(agent_id, session_id, state_update)
+                self.update_state(agent_id, session_id, state_update)
             
             # Get updated session
-            return await self.get_session(agent_id, session_id, request.user_id)
+            return self.get_session(agent_id, session_id, request.user_id)
             
         except Exception as e:
             logger.error(f"Failed to create session: {e}")
             raise
     
-    async def get_session(
+    def get_session(
         self,
         agent_id: str,
         session_id: str,
@@ -110,11 +113,11 @@ class SessionService:
             )
             
             # Get session from Vertex AI
-            response = await self.client.agent_engines.sessions.get(
+            response = self.client.agent_engines.sessions.get(
                 name=session_name
             )
             
-            session = response.response
+            session = response
             
             # Convert to SessionResponse
             return SessionResponse(
@@ -133,7 +136,7 @@ class SessionService:
                 raise SessionNotFoundError(session_id)
             raise
     
-    async def list_sessions(
+    def list_sessions(
         self,
         agent_id: str,
         user_id: str
@@ -156,13 +159,13 @@ class SessionService:
             )
             
             sessions = []
-            async for session in self.client.agent_engines.sessions.list(
+            for session in self.client.agent_engines.sessions.list(
                 name=agent_name,
                 filter=f"user_id={user_id}"
             ):
                 session_id = session.name.split("/")[-1]
                 sessions.append(
-                    await self.get_session(agent_id, session_id, user_id)
+                    self.get_session(agent_id, session_id, user_id)
                 )
             
             return sessions
@@ -171,7 +174,7 @@ class SessionService:
             logger.error(f"Failed to list sessions: {e}")
             raise
     
-    async def update_state(
+    def update_state(
         self,
         agent_id: str,
         session_id: str,
@@ -196,7 +199,7 @@ class SessionService:
             
             # If replace=True, we need to clear existing state first
             if request.replace:
-                current_session = await self.get_session(
+                current_session = self.get_session(
                     agent_id, session_id, request.user_id
                 )
                 # Create delta that sets values to None (clears them)
@@ -215,12 +218,12 @@ class SessionService:
             )
             
             # Append event (this updates the state)
-            await self.event_service.append_event(
+            self.event_service.append_event(
                 agent_id, session_id, event_request
             )
             
             # Return updated session
-            return await self.get_session(agent_id, session_id, request.user_id)
+            return self.get_session(agent_id, session_id, request.user_id)
             
         except Exception as e:
             logger.error(f"Failed to update session state: {e}")

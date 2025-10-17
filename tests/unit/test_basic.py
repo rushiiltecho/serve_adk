@@ -12,7 +12,7 @@ def test_python_path():
 def test_app_import():
     """Test that app module can be imported."""
     try:
-        from config import Settings
+        from app.config import Settings
         assert Settings is not None
     except ImportError as e:
         pytest.fail(f"Failed to import app module: {e}")
@@ -35,7 +35,7 @@ def test_agents_config():
 
 def test_settings_creation():
     """Test that Settings can be created."""
-    from config import Settings, AgentConfig
+    from app.config import Settings, AgentConfig
     
     # Temporarily unset CORS_ORIGINS to avoid interference
     cors_backup = os.environ.get('CORS_ORIGINS')
@@ -72,7 +72,7 @@ def test_settings_creation():
 
 def test_agent_config_no_extra_fields():
     """Test that AgentConfig doesn't require project_id or location."""
-    from config import AgentConfig
+    from app.config import AgentConfig
     
     # This should work without project_id or location
     agent = AgentConfig(

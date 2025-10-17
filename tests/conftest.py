@@ -21,7 +21,7 @@ os.environ["CORS_ORIGINS"] = '["http://localhost:3000"]'  # Set valid CORS_ORIGI
 @pytest.fixture(scope="session")
 def test_settings():
     """Test settings fixture."""
-    from config import Settings, AgentConfig
+    from app.config import Settings, AgentConfig
     
     return Settings(
         app_name="test-agent-gateway",
@@ -76,7 +76,7 @@ def mock_session():
 @pytest.fixture
 def sample_query_request():
     """Sample query request."""
-    from models.requests import QueryRequest
+    from app.models.requests import QueryRequest
     return QueryRequest(
         user_id="test-user",
         message="Hello, test!",
@@ -87,7 +87,7 @@ def sample_query_request():
 @pytest.fixture
 def sample_session_create_request():
     """Sample session create request."""
-    from models.requests import SessionCreateRequest
+    from app.models.requests import SessionCreateRequest
     return SessionCreateRequest(
         user_id="test-user",
         initial_state={"language": "en"}

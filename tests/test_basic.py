@@ -37,7 +37,7 @@ def test_agents_config():
 
 def test_settings_creation():
     """Test that Settings can be created."""
-    from config import Settings, AgentConfig
+    from app.config import Settings, AgentConfig
     
     # Create settings with test values
     settings = Settings(
@@ -62,7 +62,7 @@ def test_settings_creation():
 
 def test_agent_config_no_extra_fields():
     """Test that AgentConfig doesn't require project_id or location."""
-    from config import AgentConfig
+    from app.config import AgentConfig
     
     # This should work without project_id or location
     agent = AgentConfig(

@@ -2,17 +2,16 @@
 import logging
 import time
 from typing import List, Dict, Any, Optional
-from datetime import datetime
+from datetime import datetime, timezone  # 👈 1. IMPORT TIMEZONE
 from google.genai import types as genai_types
 from google.adk.events import EventActions
 import vertexai
-from config import settings
-from models.requests import EventAppendRequest
-from models.responses import EventResponse
-from core.errors import EventAppendError
-from services.auth_service import auth_service
-from utils.converters import adk_event_to_dict, create_adk_event
-
+from app.config import settings
+from app.models.requests import EventAppendRequest
+from app.models.responses import EventResponse
+from app.core.errors import EventAppendError
+from app.services.auth_service import auth_service
+from app.utils.converters import adk_event_to_dict, create_adk_event
 logger = logging.getLogger(__name__)
 
 
@@ -28,11 +27,15 @@ class EventService:
         """Initialize Vertex AI client."""
         try:
             credentials = auth_service.get_credentials()
-            self.client = vertexai.Client(
+            client = vertexai.Client(
                 project=settings.google_cloud_project,
                 location=settings.google_cloud_location,
                 credentials=credentials
             )
+            # 👇 ADD THIS CHECK
+            if not client:
+                raise RuntimeError("Vertex AI Client initialization returned None.")
+            self.client = client
             logger.info("Event service initialized")
         except Exception as e:
             logger.error(f"Failed to initialize event service: {e}")
@@ -120,7 +123,7 @@ class EventService:
                 name=session_name,
                 author=request.author,
                 invocation_id=request.invocation_id,
-                timestamp=datetime.fromtimestamp(timestamp),
+                timestamp=datetime.fromtimestamp(timestamp, timezone.utc),
                 config=config if config else None
             )
             

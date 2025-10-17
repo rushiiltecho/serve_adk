@@ -1,7 +1,7 @@
 """Unit tests for configuration."""
 import pytest
 import os
-from config import Settings, AgentConfig
+from app.config import Settings, AgentConfig
 
 
 def test_agent_config_validation():

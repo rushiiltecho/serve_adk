@@ -3,12 +3,12 @@ import logging
 from typing import AsyncGenerator, Dict, Any, Optional
 import vertexai
 from google.genai import types as genai_types
-from config import AgentConfig, settings
-from models.requests import QueryRequest
-from models.responses import QueryResponse
-from core.errors import AgentEngineError, AgentNotFoundError
-from services.auth_service import auth_service
-from utils.converters import adk_event_to_dict, content_to_dict
+from app.config import AgentConfig, settings
+from app.models.requests import QueryRequest
+from app.models.responses import QueryResponse
+from app.core.errors import AgentEngineError, AgentNotFoundError
+from app.services.auth_service import auth_service
+from app.utils.converters import adk_event_to_dict, content_to_dict
 
 logger = logging.getLogger(__name__)
 
