@@ -1,6 +1,6 @@
 """Type converters between Google types and dicts."""
 import logging
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any, List, Optional, Union
 from google.genai import types as genai_types
 from google.adk.events import Event as AdkEvent, EventActions
 
@@ -51,10 +51,11 @@ def part_to_dict(part: genai_types.Part) -> Dict[str, Any]:
     if hasattr(part, 'inline_data') and part.inline_data:
         result["inline_data"] = {
             "mime_type": part.inline_data.mime_type,
-            "data": part.inline_data.data  # Base64 encode}
-            }
+            "data": part.inline_data.data
+        }
     
     return result
+
 
 def dict_to_content(data: Dict[str, Any]) -> genai_types.Content:
     """Convert dict to genai_types.Content."""
@@ -135,8 +136,17 @@ def dict_to_event_actions(data: Dict[str, Any]) -> EventActions:
     )
 
 
-def adk_event_to_dict(event: AdkEvent) -> Dict[str, Any]:
-    """Convert ADK Event to dict for JSON serialization."""
+def adk_event_to_dict(event: Union[AdkEvent, Dict[str, Any]]) -> Dict[str, Any]:
+    """
+    Convert ADK Event to dict for JSON serialization.
+    
+    Handles both Event objects and dict objects (from async_stream_query).
+    """
+    # If already a dict, return it
+    if isinstance(event, dict):
+        return event
+    
+    # Otherwise, convert Event object to dict
     result = {
         "id": event.id,
         "author": event.author,

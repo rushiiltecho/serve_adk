@@ -8,7 +8,7 @@ from app.models.requests import QueryRequest
 from app.models.responses import QueryResponse
 from app.core.errors import AgentEngineError, AgentNotFoundError
 from app.services.auth_service import auth_service
-from app.utils.converters import adk_event_to_dict, content_to_dict
+from app.utils.converters import adk_event_to_dict
 
 logger = logging.getLogger(__name__)
 
@@ -29,22 +29,26 @@ class AgentService:
             # Get credentials
             credentials = auth_service.get_credentials()
             
+            # Use agent-specific project/location or fall back to global settings
+            project = self.agent_config.project_id or settings.google_cloud_project
+            location = self.agent_config.location or settings.google_cloud_location
+            
             # Initialize Vertex AI client
             self.client = vertexai.Client(
-                project=self.agent_config.project_id,
-                location=self.agent_config.location,
+                project=project,
+                location=location,
                 credentials=credentials
             )
             
             # Get agent engine instance
             agent_name = (
-                f"projects/{self.agent_config.project_id}/"
-                f"locations/{self.agent_config.location}/"
+                f"projects/{project}/"
+                f"locations/{location}/"
                 f"reasoningEngines/{self.agent_config.agent_id}"
             )
             
             self.agent = self.client.agent_engines.get(name=agent_name)
-            logger.info(f"Initialized agent: {self.agent_config.name}")
+            logger.info(f"Initialized agent: {self.agent_config.name} (ID: {self.agent_config.agent_id})")
             
         except Exception as e:
             logger.error(f"Failed to initialize agent {self.agent_config.name}: {e}")
@@ -70,30 +74,32 @@ class AgentService:
                 parts=[genai_types.Part(text=request.message)]
             )
             
-            # Query the agent
+            # Query the agent - collect all events
             events_list = []
             final_response = ""
             session_id = request.session_id
             
-            # Use async_stream_query and collect all events
+            # Use async_stream_query to get all events
             async for event in self.agent.async_stream_query(
                 user_id=request.user_id,
                 session_id=session_id,
-                new_message=user_content
+                message=user_content
             ):
-                # Convert event to dict
+                # Convert event to dict (handles both dict and Event objects)
                 event_dict = adk_event_to_dict(event)
                 events_list.append(event_dict)
                 
-                # Extract text from content
-                if event.content and event.content.parts:
-                    for part in event.content.parts:
-                        if hasattr(part, 'text') and part.text:
-                            final_response += part.text
+                # Extract text from content (event is already a dict)
+                if "content" in event_dict and event_dict["content"]:
+                    content = event_dict["content"]
+                    if "parts" in content:
+                        for part in content["parts"]:
+                            if "text" in part and part["text"]:
+                                final_response += part["text"]
                 
-                # Get session_id from first event
-                if not session_id and hasattr(event, 'session_id'):
-                    session_id = event.session_id
+                # Get session_id from event if not provided
+                if not session_id and "invocation_id" in event_dict:
+                    session_id = event_dict["invocation_id"]
             
             # Extract usage metadata from events
             usage_metadata = self._extract_usage_metadata(events_list)
@@ -136,7 +142,7 @@ class AgentService:
             async for event in self.agent.async_stream_query(
                 user_id=request.user_id,
                 session_id=request.session_id,
-                new_message=user_content
+                message=user_content
             ):
                 # Convert and yield event
                 event_dict = adk_event_to_dict(event)

@@ -4,6 +4,38 @@ from datetime import datetime
 from pydantic import BaseModel, Field
 
 
+class SessionResponse(BaseModel):
+    """Response with session information."""
+    session_id: str
+    user_id: str
+    app_name: str
+    state: Dict[str, Any]
+    event_count: int
+    created_at: datetime
+    updated_at: datetime
+
+
+class SessionListResponse(BaseModel):
+    """Response with list of sessions."""
+    sessions: List[SessionResponse]
+    next_page_token: Optional[str] = None
+    total_count: int
+
+
+class EventResponse(BaseModel):
+    """Response after appending an event."""
+    event_id: str = Field(..., description="ID of the appended event")
+    session_state: Dict[str, Any] = Field(..., description="Updated session state")
+    success: bool = Field(default=True, description="Whether operation succeeded")
+
+
+class EventListResponse(BaseModel):
+    """Response with list of events."""
+    events: List[Dict[str, Any]]
+    next_page_token: Optional[str] = None
+    total_count: int
+
+
 class QueryResponse(BaseModel):
     """Response from agent query."""
     session_id: str = Field(..., description="Session ID used for the query")
@@ -17,24 +49,6 @@ class QueryResponse(BaseModel):
         description="Token usage and other metadata"
     )
     trace_id: Optional[str] = Field(None, description="Trace ID for debugging")
-
-
-class SessionResponse(BaseModel):
-    """Response with session information."""
-    session_id: str
-    user_id: str
-    app_name: str
-    state: Dict[str, Any]
-    event_count: int
-    created_at: datetime
-    updated_at: datetime
-
-
-class EventResponse(BaseModel):
-    """Response after appending an event."""
-    event_id: str = Field(..., description="ID of the appended event")
-    session_state: Dict[str, Any] = Field(..., description="Updated session state")
-    success: bool = Field(default=True, description="Whether operation succeeded")
 
 
 class MemoryResponse(BaseModel):

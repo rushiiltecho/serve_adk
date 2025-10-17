@@ -1,8 +1,6 @@
 """Request models using google.genai.types where possible."""
 from typing import Optional, Dict, Any, List
 from pydantic import BaseModel, Field
-from google.genai import types as genai_types
-from google.adk.events import EventActions
 
 
 class QueryRequest(BaseModel):
@@ -26,9 +24,14 @@ class QueryRequest(BaseModel):
 class SessionCreateRequest(BaseModel):
     """Request to create a new session."""
     user_id: str = Field(..., description="User ID for the session")
+    session_id: Optional[str] = Field(None, description="Optional specific session ID")
     initial_state: Optional[Dict[str, Any]] = Field(
         default_factory=dict,
         description="Initial state for the session"
+    )
+    session_config: Optional[Dict[str, Any]] = Field(
+        None,
+        description="Additional session configuration"
     )
     
     class Config:
@@ -37,6 +40,30 @@ class SessionCreateRequest(BaseModel):
                 "user_id": "user_123",
                 "initial_state": {
                     "user_preferences": {"language": "en", "timezone": "UTC"}
+                },
+                "session_config": {
+                    "max_events": 1000,
+                    "timeout_seconds": 3600
+                }
+            }
+        }
+
+
+class SessionUpdateRequest(BaseModel):
+    """Request to update session configuration."""
+    user_id: str = Field(..., description="User ID for verification")
+    config_updates: Dict[str, Any] = Field(
+        ...,
+        description="Configuration updates to apply"
+    )
+    
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "user_id": "user_123",
+                "config_updates": {
+                    "max_events": 2000,
+                    "timeout_seconds": 7200
                 }
             }
         }

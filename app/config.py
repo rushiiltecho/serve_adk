@@ -9,6 +9,8 @@ class AgentConfig(BaseSettings):
     """Configuration for a single agent."""
     
     agent_id: str = Field(..., description="Vertex AI Agent Engine ID")
+    project_id: Optional[str] = Field(default=None, description="GCP Project ID (defaults to global)")
+    location: Optional[str] = Field(default=None, description="GCP Location (defaults to global)")
     name: str = Field(..., description="Internal agent name")
     display_name: str = Field(..., description="Display name for the agent")
     description: str = Field(default="", description="Agent description")
@@ -101,24 +103,5 @@ class Settings(BaseSettings):
         return None
 
 
-# Create settings instance - lazy initialization
-_settings: Optional[Settings] = None
-
-
-def get_settings() -> Settings:
-    """Get or create settings instance."""
-    global _settings
-    if _settings is None:
-        _settings = Settings()
-    return _settings
-
-
-# For backward compatibility - lazy initialization
+# Create settings instance
 settings = Settings()
-
-
-def __getattr__(name):
-    """Lazy initialization of settings."""
-    if name == "settings":
-        return get_settings()
-    raise AttributeError(f"module '{__name__}' has no attribute '{name}'")
