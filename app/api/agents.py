@@ -1,204 +1,119 @@
 """Agent query endpoints."""
 import logging
-from typing import Any, AsyncGenerator, Dict, Optional
 from fastapi import APIRouter, HTTPException, Depends
 from sse_starlette.sse import EventSourceResponse
-import vertexai
-from google.genai import types as genai_types
 from app.models.requests import QueryRequest
 from app.models.responses import QueryResponse
 from app.services.agent_service import agent_service_factory
 from app.core.streaming import create_sse_event, SSEEventType
 from app.core.errors import AgentNotFoundError, AgentEngineError
-from app.config import AgentConfig, settings
-from app.services import auth_service
-from app.utils.converters import adk_event_to_dict
+
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/agents", tags=["Agents"])
 
-class AgentService:
-    """Service for deployed agent operations."""
+
+@router.get("", response_model=list)
+async def list_agents():
+    """List all configured agents."""
+    return agent_service_factory.list_agents()
+
+
+@router.post("/{agent_id}/query", response_model=QueryResponse)
+async def query_agent(agent_id: str, request: QueryRequest):
+    """
+    Query a deployed agent (non-streaming).
     
-    def __init__(self, agent_config: AgentConfig):
-        """Initialize agent service."""
-        self.agent_config = agent_config
-        self.client = None
-        self.agent = None
-        self._initialize_client()
+    Args:
+        agent_id: The agent's ID
+        request: Query request with user message
     
-    def _initialize_client(self):
-        """Initialize Vertex AI client and agent."""
-        try:
-            # Get credentials
-            credentials = auth_service.get_credentials()
-            
-            # Initialize Vertex AI client
-            client = vertexai.Client(
-                project=self.agent_config.project_id,
-                location=self.agent_config.location,
-                credentials=credentials
-            )
-            # 👇 ADD THIS CHECK
-            if not client:
-                raise RuntimeError("Vertex AI Client initialization returned None.")
-            self.client = client
-            
-            # Get agent engine instance
-            agent_name = (
-                f"projects/{self.agent_config.project_id}/"
-                f"locations/{self.agent_config.location}/"
-                f"reasoningEngines/{self.agent_config.agent_id}"
-            )
-            
-            self.agent = self.client.agent_engines.get(name=agent_name)
-            logger.info(f"Initialized agent: {self.agent_config.name}")
-            
-        except Exception as e:
-            logger.error(f"Failed to initialize agent {self.agent_config.name}: {e}")
-            raise AgentEngineError(f"Agent initialization failed: {str(e)}", e)
+    Returns:
+        Complete query response with agent's reply
+    """
+    try:
+        agent_service = agent_service_factory.get_agent_service(agent_id)
+        response = await agent_service.query(request)
+        return response
     
-    async def query(self, request: QueryRequest) -> QueryResponse:
-        """
-        Query the deployed agent (non-streaming).
+    except AgentNotFoundError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    except AgentEngineError as e:
+        raise HTTPException(status_code=502, detail=str(e))
+    except Exception as e:
+        logger.error(f"Query failed: {e}")
+        raise HTTPException(status_code=500, detail="Internal server error")
+
+
+@router.post("/{agent_id}/stream_query")
+async def stream_query_agent(agent_id: str, request: QueryRequest):
+    """
+    Query a deployed agent with streaming (SSE).
+    
+    Args:
+        agent_id: The agent's ID
+        request: Query request with user message
+    
+    Returns:
+        Server-Sent Events stream of agent responses
+    """
+    try:
+        agent_service = agent_service_factory.get_agent_service(agent_id)
         
-        Args:
-            request: Query request with user_id, message, etc.
-        
-        Returns:
-            QueryResponse with agent's response and events
-        """
-        if not self.agent:
-            raise AgentNotFoundError(self.agent_config.agent_id)
-        
-        try:
-            # Convert message to Content
-            user_content = genai_types.Content(
-                role="user",
-                parts=[genai_types.Part(text=request.message)]
-            )
-            
-            # Query the agent
-            events_list = []
-            final_response = ""
-            session_id = request.session_id
-            
-            # Use async_stream_query and collect all events
-            async for event in self.agent.async_stream_query(
-                user_id=request.user_id,
-                session_id=session_id,
-                new_message=user_content
-            ):
-                # Convert event to dict
-                event_dict = adk_event_to_dict(event)
-                events_list.append(event_dict)
+        async def event_generator():
+            """Generate SSE events from agent stream."""
+            try:
+                # Send start event
+                yield await create_sse_event(
+                    event_type=SSEEventType.MESSAGE_START,
+                    data={"session_id": request.session_id, "user_id": request.user_id}
+                )
                 
-                # Extract text from content
-                if event.content and event.content.parts:
-                    for part in event.content.parts:
-                        if hasattr(part, 'text') and part.text:
-                            final_response += part.text
+                # Stream events from agent
+                async for event_dict in agent_service.stream_query(request):
+                    # Determine event type
+                    event_type = SSEEventType.CONTENT_DELTA
+                    
+                    if "actions" in event_dict:
+                        actions = event_dict["actions"]
+                        if actions.get("state_delta"):
+                            event_type = "state_update"
+                    
+                    if "content" in event_dict:
+                        content = event_dict["content"]
+                        if content and "parts" in content:
+                            for part in content["parts"]:
+                                if "function_call" in part:
+                                    event_type = SSEEventType.FUNCTION_CALL
+                                elif "function_response" in part:
+                                    event_type = SSEEventType.FUNCTION_RESPONSE
+                    
+                    # Send event
+                    yield await create_sse_event(
+                        event_type=event_type,
+                        data=event_dict,
+                        event_id=event_dict.get("id")
+                    )
                 
-                # Get session_id from first event
-                if not session_id and hasattr(event, 'session_id'):
-                    session_id = event.session_id
+                # Send complete event
+                yield await create_sse_event(
+                    event_type=SSEEventType.MESSAGE_COMPLETE,
+                    data={"status": "completed"}
+                )
             
-            # Extract usage metadata from events
-            usage_metadata = self._extract_usage_metadata(events_list)
-            
-            return QueryResponse(
-                session_id=session_id or f"new-session-{request.user_id}",
-                response=final_response,
-                events=events_list,
-                usage_metadata=usage_metadata
-            )
-            
-        except Exception as e:
-            logger.error(f"Query failed: {e}")
-            raise AgentEngineError(f"Query failed: {str(e)}", e)
+            except Exception as e:
+                logger.error(f"Stream error: {e}")
+                yield await create_sse_event(
+                    event_type=SSEEventType.ERROR,
+                    data={"error": str(e)}
+                )
+        
+        return EventSourceResponse(event_generator())
     
-    async def stream_query(
-        self,
-        request: QueryRequest
-    ) -> AsyncGenerator[Dict[str, Any], None]:
-        """
-        Stream query results from deployed agent.
-        
-        Args:
-            request: Query request
-        
-        Yields:
-            Event dictionaries as they arrive
-        """
-        if not self.agent:
-            raise AgentNotFoundError(self.agent_config.agent_id)
-        
-        try:
-            # Convert message to Content
-            user_content = genai_types.Content(
-                role="user",
-                parts=[genai_types.Part(text=request.message)]
-            )
-            
-            # Stream events from agent
-            async for event in self.agent.async_stream_query(
-                user_id=request.user_id,
-                session_id=request.session_id,
-                new_message=user_content
-            ):
-                # Convert and yield event
-                event_dict = adk_event_to_dict(event)
-                yield event_dict
-                
-        except Exception as e:
-            logger.error(f"Stream query failed: {e}")
-            raise AgentEngineError(f"Stream query failed: {str(e)}", e)
-    
-    def _extract_usage_metadata(self, events: list) -> Optional[Dict[str, Any]]:
-        """Extract usage metadata from events."""
-        for event in reversed(events):  # Check from latest event
-            if "usage_metadata" in event:
-                return event["usage_metadata"]
-        return None
-
-
-class AgentServiceFactory:
-    """Factory for creating agent services."""
-    
-    def __init__(self):
-        self._services: Dict[str, AgentService] = {}
-    
-    def get_agent_service(self, agent_id: str) -> AgentService:
-        """Get or create agent service for given agent_id."""
-        if agent_id in self._services:
-            return self._services[agent_id]
-        
-        # Get agent config
-        agent_config = settings.get_agent_config(agent_id)
-        if not agent_config:
-            raise AgentNotFoundError(agent_id)
-        
-        if not agent_config.enabled:
-            raise AgentEngineError(f"Agent {agent_id} is disabled")
-        
-        # Create and cache service
-        service = AgentService(agent_config)
-        self._services[agent_id] = service
-        return service
-    
-    def list_agents(self) -> list[Dict[str, Any]]:
-        """List all configured agents."""
-        return [
-            {
-                "agent_id": agent.agent_id,
-                "name": agent.name,
-                "display_name": agent.display_name,
-                "description": agent.description,
-                "enabled": agent.enabled
-            }
-            for agent in settings.agents
-        ]
-
-
-# Global factory instance
-agent_service_factory = AgentServiceFactory()
+    except AgentNotFoundError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    except AgentEngineError as e:
+        raise HTTPException(status_code=502, detail=str(e))
+    except Exception as e:
+        logger.error(f"Stream query failed: {e}")
+        raise HTTPException(status_code=500, detail="Internal server error")

@@ -1,5 +1,6 @@
 """Agent service for interacting with deployed agents."""
 import logging
+import os
 from typing import AsyncGenerator, Dict, Any, Optional
 import vertexai
 from google.genai import types as genai_types
@@ -32,7 +33,11 @@ class AgentService:
             # Initialize Vertex AI client
             self.client = vertexai.Client(
                 project=self.agent_config.project_id,
-                location=self.agent_config.location,
+                location=getattr(
+                    self.agent_config, 
+                    "location",
+                    os.getenv("GOOGLE_CLOUD_LOCATION","us-central1")
+                ),
                 credentials=credentials
             )
             

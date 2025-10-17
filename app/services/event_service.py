@@ -41,7 +41,7 @@ class EventService:
             logger.error(f"Failed to initialize event service: {e}")
             raise
     
-    async def append_event(
+    def append_event(
         self,
         agent_id: str,
         session_id: str,
@@ -119,7 +119,7 @@ class EventService:
                     config["actions"]["escalate"] = actions.escalate
             
             # Append event using Vertex AI SDK
-            await self.client.agent_engines.sessions.events.append(
+            self.client.agent_engines.sessions.events.append(
                 name=session_name,
                 author=request.author,
                 invocation_id=request.invocation_id,
@@ -130,7 +130,7 @@ class EventService:
             logger.info(f"Appended event to session {session_id}")
             
             # Get updated session to return current state
-            session_response = await self.client.agent_engines.sessions.get(
+            session_response = self.client.agent_engines.sessions.get(
                 name=session_name
             )
             

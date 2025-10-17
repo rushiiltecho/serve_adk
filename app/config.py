@@ -9,6 +9,7 @@ class AgentConfig(BaseSettings):
     """Configuration for a single agent."""
     
     agent_id: str = Field(..., description="Vertex AI Agent Engine ID")
+    project_id: Optional[str] = Field(default=None, description="GCP Project ID")
     name: str = Field(..., description="Internal agent name")
     display_name: str = Field(..., description="Display name for the agent")
     description: str = Field(default="", description="Agent description")
