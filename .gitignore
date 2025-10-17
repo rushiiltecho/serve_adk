@@ -1,0 +1,477 @@
+# .gitignore for Vertex AI Agent Gateway
+
+# ============================================================================
+# Python
+# ============================================================================
+
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# C extensions
+*.so
+
+# Distribution / packaging
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# PyInstaller
+*.manifest
+*.spec
+
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.log
+.hypothesis/
+.pytest_cache/
+cover/
+.ruff_cache/
+
+# Translations
+*.mo
+*.pot
+
+# Django stuff:
+*.log
+local_settings.py
+db.sqlite3
+db.sqlite3-journal
+
+# Flask stuff:
+instance/
+.webassets-cache
+
+# Scrapy stuff:
+.scrapy
+
+# Sphinx documentation
+docs/_build/
+
+# PyBuilder
+.pybuilder/
+target/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# IPython
+profile_default/
+ipython_config.py
+
+# pyenv
+.python-version
+
+# pipenv
+Pipfile.lock
+
+# poetry
+poetry.lock
+
+# pdm
+.pdm.toml
+
+# PEP 582
+__pypackages__/
+
+# Celery stuff
+celerybeat-schedule
+celerybeat.pid
+
+# SageMath parsed files
+*.sage.py
+
+# Environments
+.env
+.env.*
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Spyder project settings
+.spyderproject
+.spyproject
+
+# Rope project settings
+.ropeproject
+
+# mkdocs documentation
+/site
+
+# mypy
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# Pyre type checker
+.pyre/
+
+# pytype static type analyzer
+.pytype/
+
+# Cython debug symbols
+cython_debug/
+
+# ============================================================================
+# Google Cloud / GCP
+# ============================================================================
+
+# Service Account Keys (CRITICAL - Never commit these!)
+*.json
+service-account*.json
+service_account*.json
+*-key.json
+*-credentials.json
+credentials.json
+gcp-*.json
+google-*.json
+
+# Application Default Credentials
+application_default_credentials.json
+
+# GCP Config
+.gcloud/
+.config/gcloud/
+
+# ============================================================================
+# IDE / Editors
+# ============================================================================
+
+# VSCode
+.vscode/
+*.code-workspace
+.history/
+
+# PyCharm
+.idea/
+*.iml
+*.iws
+*.ipr
+
+# Sublime Text
+*.sublime-project
+*.sublime-workspace
+
+# Vim
+*.swp
+*.swo
+*~
+.netrwhist
+
+# Emacs
+*~
+\#*\#
+.\#*
+
+# Eclipse
+.project
+.pydevproject
+.settings/
+
+# NetBeans
+nbproject/
+
+# JetBrains
+.idea/
+*.iml
+
+# ============================================================================
+# Operating Systems
+# ============================================================================
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+.DocumentRevisions-V100
+.fseventsd
+.Spotlight-V100
+.TemporaryItems
+.Trashes
+.VolumeIcon.icns
+.com.apple.timemachine.donotpresent
+.AppleDB
+.AppleDesktop
+Network Trash Folder
+Temporary Items
+.apdisk
+
+# Windows
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+*.stackdump
+[Dd]esktop.ini
+$RECYCLE.BIN/
+*.cab
+*.msi
+*.msix
+*.msm
+*.msp
+*.lnk
+
+# Linux
+*~
+.fuse_hidden*
+.directory
+.Trash-*
+.nfs*
+
+# ============================================================================
+# Project Specific
+# ============================================================================
+
+# Environment files
+.env.local
+.env.development
+.env.test
+.env.production
+.env.*.local
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+.pnpm-debug.log*
+
+# Runtime data
+pids/
+*.pid
+*.seed
+*.pid.lock
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+*.temp
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+
+# Backup files
+*.bak
+*.backup
+*~
+
+# Test artifacts
+test-results/
+test-output/
+
+# Build artifacts
+build/
+dist/
+out/
+
+# Cache directories
+.cache/
+cache/
+
+# ============================================================================
+# Docker
+# ============================================================================
+
+# Docker files to ignore (keep Dockerfile)
+docker-compose.override.yml
+.dockerignore
+
+# ============================================================================
+# Documentation
+# ============================================================================
+
+# Generated documentation
+docs/_build/
+docs/site/
+
+# ============================================================================
+# Deployment
+# ============================================================================
+
+# Terraform
+*.tfstate
+*.tfstate.*
+.terraform/
+.terraform.lock.hcl
+terraform.tfvars
+*.tfvars
+
+# Kubernetes
+*.kubeconfig
+
+# Cloud Run / App Engine
+.gcloudignore
+
+# ============================================================================
+# Dependencies
+# ============================================================================
+
+# Node modules (if using any frontend tools)
+node_modules/
+package-lock.json
+yarn.lock
+
+# Bower
+bower_components/
+
+# ============================================================================
+# Security & Secrets
+# ============================================================================
+
+# API Keys and secrets (CRITICAL)
+*.key
+*.pem
+*.cert
+*.crt
+*.p12
+*.pfx
+secrets/
+secret/
+.secrets/
+.secret/
+
+# SSH keys
+id_rsa
+id_dsa
+id_ecdsa
+id_ed25519
+*.ppk
+
+# GPG keys
+secring.*
+
+# ============================================================================
+# Monitoring & Analytics
+# ============================================================================
+
+# Sentry
+.sentryclirc
+
+# NewRelic
+newrelic.ini
+
+# ============================================================================
+# Misc
+# ============================================================================
+
+# Compressed files
+*.zip
+*.tar.gz
+*.rar
+*.7z
+
+# Media files (usually not needed in repo)
+*.mp4
+*.mov
+*.avi
+*.mp3
+*.wav
+
+# Large data files
+*.csv
+*.tsv
+*.parquet
+data/
+datasets/
+
+# Development databases
+*.db-journal
+*.db-shm
+*.db-wal
+
+# Editor configs (keep .editorconfig)
+.editorconfig.local
+
+# Tool versions (keep .tool-versions if using asdf)
+.nvmrc.local
+
+# ============================================================================
+# CI/CD
+# ============================================================================
+
+# GitHub Actions
+.github/workflows/*.local.yml
+
+# GitLab CI
+.gitlab-ci.local.yml
+
+# CircleCI
+.circleci/local.yml
+
+# ============================================================================
+# Keep These Files
+# ============================================================================
+# The following patterns ensure important files are NOT ignored
+
+# Keep example/template files
+!.env.example
+!.env.template
+!config.example.json
+!config.template.json
+
+# Keep Docker files
+!Dockerfile
+!.dockerignore
+!docker-compose.yml
+
+# Keep documentation
+!README.md
+!CHANGELOG.md
+!LICENSE
+!CONTRIBUTING.md
+!docs/*.md
+
+# Keep CI/CD configs
+!.github/workflows/*.yml
+!.gitlab-ci.yml
+!.circleci/config.yml
+
+# Keep linter configs
+!.pylintrc
+!.flake8
+!.ruff.toml
+!pyproject.toml
+!setup.py
+!setup.cfg
+
+# Keep Git configs
+!.gitattributes
+!.gitignore
+
+# Keep requirements files
+!requirements*.txt
+!Pipfile
+!pyproject.toml

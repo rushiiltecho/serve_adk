@@ -1,0 +1,37 @@
+# Core Framework
+fastapi
+uvicorn[standard]
+pydantic
+pydantic-settings
+
+# Google Cloud & AI
+google-cloud-aiplatform[adk,agent_engine]
+google-genai
+vertexai
+google-auth
+google-cloud-logging
+
+# Streaming
+sse-starlette
+
+# Utilities
+python-json-logger
+pyyaml==6.0.2
+python-multipart
+httpx
+
+# CLI
+clic
+rich
+
+# Testing
+pytest
+pytest-asyncio
+pytest-cov
+pytest-mock
+httpx
+
+# Development
+black
+ruff
+mypy

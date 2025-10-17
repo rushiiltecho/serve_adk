@@ -1,0 +1,33 @@
+# Agent configurations
+agents:
+  - agent_id: "1234567890"  # Reasoning Engine ID
+    name: "currency_agent"
+    display_name: "Currency Exchange Agent"
+    description: "Agent for currency exchange queries"
+    project_id: "${GOOGLE_CLOUD_PROJECT}"
+    location: "${GOOGLE_CLOUD_LOCATION}"
+    enabled: true
+    
+  - agent_id: "0987654321"
+    name: "weather_agent"
+    display_name: "Weather Information Agent"
+    description: "Agent for weather queries"
+    project_id: "${GOOGLE_CLOUD_PROJECT}"
+    location: "${GOOGLE_CLOUD_LOCATION}"
+    enabled: true
+
+# Server configuration
+server:
+  title: "ADK Proxy Server API"
+  description: "Backend API for interacting with deployed Vertex AI Agent Engine agents"
+  version: "1.0.0"
+  docs_url: "/docs"
+  redoc_url: "/redoc"
+  openapi_url: "/openapi.json"
+
+# Features
+features:
+  enable_streaming: true
+  enable_memory: true
+  enable_debug_endpoints: true
+  max_session_events: 1000
